@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "gunlock:item/laser_plasma_gun"
+  }
+}
