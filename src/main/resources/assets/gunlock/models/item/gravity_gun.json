@@ -1,6 +1,6 @@
 {
-  "parent": "minecraft:item/generated",
-  "textures": {
-    "layer0": "gunlock:item/gravity_gun"
+  "model": {
+    "type": "minecraft:model",
+    "model": "gunlock:item/gravity_gun"
   }
 }
