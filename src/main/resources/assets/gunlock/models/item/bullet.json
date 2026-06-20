@@ -1,6 +1,6 @@
 {
-  "parent": "minecraft:item/generated",
-  "textures": {
-    "layer0": "gunlock:item/bullet"
+  "model": {
+    "type": "minecraft:model",
+    "model": "gunlock:item/bullet"
   }
 }
