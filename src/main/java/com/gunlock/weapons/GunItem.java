@@ -1,6 +1,7 @@
 package com.gunlock.weapons;
 
 import com.gunlock.config.GunlockConfig;
+import com.gunlock.registry.GunlockItems;
 import com.gunlock.registry.GunlockSounds;
 
 import net.minecraft.core.particles.ParticleTypes;
@@ -10,6 +11,7 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -25,17 +27,15 @@ import java.util.Optional;
 /**
  * Base item for every firearm.
  *
- * Instant-fire shooting (hitscan): right-click raycasts from the player's eyes
- * in the look direction, draws a particle tracer to the impact point, damages
- * the first living entity hit, plays the gun's fire sound, and applies a
- * per-gun cooldown from fire-rate RPM.
+ * Ammo rule:
+ *   - Creative (player.getAbilities().instabuild): unlimited, consumes nothing.
+ *   - Survival: each shot consumes ONE Bullet from the inventory. With no
+ *     bullets left, the gun will not fire.
  *
- * Deliberately avoids ALL projectile-entity classes (Arrow etc.), which is the
- * package that gets reorganised between versions — this uses only core math
- * and entity classes. A visible flying bullet sprite is a later upgrade.
+ * Shooting is instant hitscan: raycast from the eyes, particle tracer to the
+ * impact, damage the first living entity hit, fire sound, per-gun cooldown.
  *
- * Lines marked (RISK) use APIs whose exact 26.2 form I couldn't verify; if the
- * build errors, those are the spots — each is a one-line change.
+ * Lines marked (RISK) use APIs whose exact 26.2 form I couldn't verify.
  */
 public class GunItem extends Item {
     private final String weaponId;
@@ -62,6 +62,14 @@ public class GunItem extends Item {
         ItemStack stack = player.getItemInHand(hand);
         WeaponStats s = effectiveStats();
 
+        boolean creative = player.getAbilities().instabuild;   // (RISK) abilities/instabuild
+
+        // Survival must pay one bullet per shot; out of ammo = no fire.
+        if (!creative && !consumeOneBullet(player)) {
+            player.getCooldowns().addCooldown(stack, 6);   // brief dry-fire delay
+            return InteractionResult.FAIL;
+        }
+
         if (level instanceof ServerLevel server) {
             fire(server, player, s);
             server.playSound(null, player.getX(), player.getY(), player.getZ(),
@@ -72,19 +80,30 @@ public class GunItem extends Item {
         return InteractionResult.SUCCESS;
     }
 
+    /** Removes one Bullet from the player's inventory; false if none found. */
+    private boolean consumeOneBullet(Player player) {
+        Inventory inv = player.getInventory();
+        for (int i = 0; i < inv.getContainerSize(); i++) {
+            ItemStack st = inv.getItem(i);
+            if (st.is(GunlockItems.BULLET.get())) {
+                st.shrink(1);
+                return true;
+            }
+        }
+        return false;
+    }
+
     private void fire(ServerLevel level, Player player, WeaponStats s) {
         Vec3 eye = player.getEyePosition();
         Vec3 dir = player.getViewVector(1.0F).normalize();
         Vec3 end = eye.add(dir.scale(s.rangeBlocks()));
 
-        // Stop the ray at the first solid block.
         BlockHitResult block = level.clip(new ClipContext(
                 eye, end, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, player));
         if (block.getType() != HitResult.Type.MISS) {
             end = block.getLocation();
         }
 
-        // Closest living entity intersecting the ray.
         LivingEntity target = null;
         double best = Double.MAX_VALUE;
         AABB scan = new AABB(eye, end).inflate(1.0);
@@ -97,7 +116,6 @@ public class GunItem extends Item {
             }
         }
 
-        // Tracer particles from muzzle to impact.
         Vec3 path = end.subtract(eye);
         int steps = (int) Math.max(1, path.length() * 2);
         for (int i = 0; i <= steps; i++) {
