@@ -1,6 +1,6 @@
 {
-  "model": {
-    "type": "minecraft:model",
-    "model": "gunlock:item/shotgun_delta"
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "gunlock:item/shotgun_delta"
   }
 }

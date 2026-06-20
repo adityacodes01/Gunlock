@@ -1,6 +1,6 @@
 {
-  "model": {
-    "type": "minecraft:model",
-    "model": "gunlock:item/jerry_chine_gun"
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "gunlock:item/jerry_chine_gun"
   }
 }

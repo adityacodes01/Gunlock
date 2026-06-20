@@ -1,6 +1,6 @@
 {
-  "model": {
-    "type": "minecraft:model",
-    "model": "gunlock:item/nerf_gun"
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "gunlock:item/nerf_gun"
   }
 }

@@ -1,6 +1,6 @@
 {
-  "model": {
-    "type": "minecraft:model",
-    "model": "gunlock:item/battle_rifle"
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "gunlock:item/battle_rifle"
   }
 }
