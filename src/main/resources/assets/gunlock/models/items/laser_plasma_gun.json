@@ -1,0 +1,6 @@
+{
+  "model": {
+    "type": "minecraft:model",
+    "model": "gunlock:item/laser_plasma_gun"
+  }
+}
